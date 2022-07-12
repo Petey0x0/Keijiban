@@ -1,0 +1,60 @@
+<html>
+<head><title>掲示板</title></head>
+<body>
+
+<p>編集画面</p>
+
+<form method="POST" action="<?php print($_SERVER['PHP_SELF']) ?>">
+<input type="text" name="user_name"><br><br>
+<textarea name="contents" rows="8" cols="40">
+</textarea><br><br>
+<input type="submit" name="post" value="編集する"></input>
+</form>
+
+<!-- キャンセルボタンを押した場合、./index.phpに遷移する -->
+<button type=“button” onclick="location.href='./index.php'">キャンセル</button>
+
+<!-- 入力した内容をhtml形式に変換して、data.txtに書き込む -->
+<?php 
+if($_SERVER["REQUEST_METHOD"] == "POST"){
+    writeData();
+}
+
+function writeData(){
+    $user_name = $_POST['user_name'];
+    $contents = $_POST['contents'];
+    $contents = nl2br($contents);
+
+    $data = "<hr>\r\n";
+    $data = $data."<p>投稿者:".$user_name."</p>\r\n";
+    $data = $data."<p>内容:</p>\r\n";
+    $data = $data."<p>".$contents."</p>\r\n";
+
+    $data_file = 'data.txt';
+
+    $fp = fopen($data_file, 'wb');
+
+    if ($fp){
+        if (flock($fp, LOCK_EX)){
+            if (fwrite($fp,  $data) === FALSE){
+                print('ファイル書き込みに失敗しました');
+            }
+
+            flock($fp, LOCK_UN);
+        }else{
+            print('ファイルロックに失敗しました');
+        }
+    }
+
+    fclose($fp);
+}
+
+// post送信が行われた場合、./index.phpに遷移する
+if (isset($_POST['post'])) {
+    header('Location: ./index.php');
+    exit;
+}
+
+?>
+</body>
+</html>
