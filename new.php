@@ -1,9 +1,17 @@
-<html>
-<head><title>掲示板</title></head>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>掲示板</title>
+</head>
 <body>
 
-<p>新しい投稿</p>
+<center><h1>新しい投稿</h1></center>
+<section>
+<h4>今の気持ちや気になっていることを書き込んでみましょう。</h4>
+</section>
 
+<!-- 入力フォーム -->
+<section>
 <form method="POST" action="<?php print($_SERVER['PHP_SELF']) ?>">
 <label>タイトル</label><br>
 <input type="text" name="title"></input><br><br>
@@ -13,63 +21,63 @@
 <textarea name="contents" rows="8" cols="40">
 </textarea><br><br>
 <input type="submit" name="post" value="投稿する"></input>
-</form>
-
 <!-- キャンセルボタンを押した場合、./index.phpに遷移する -->
 <button type="button" onclick="location.href='./index.php'">キャンセル</button>
+</form>
+</section>
 
-<!-- 入力した内容をhtml形式に変換して、data.txtに書き込む -->
+
 <?php 
+// 時間帯を日本に設定する
+date_default_timezone_set('Asia/Tokyo');
+
+// POSTが実行されるとデータを書き込む
 if($_SERVER["REQUEST_METHOD"] == "POST"){
     writeData();
+    
 }
 
 function writeData(){
-
-    // $unitime = date();
-    // dipslay_datetime($unitime, 'Asia/Tokyo');
-
-    // function dipslay_datetime($unix_timestamp, $tz){
-    //     date_default_timezone_set($tz);
-    //     $script_tz = date_default_timezone_get();
-    //     echo $script_tz;
-    // }
-
     $title = $_POST['title'];
-    $date = date("Y年m月d日 H:i:s", /*$unix_timestamp*/);
+    $date = date("Y年m月d日 H:i:s");
     $user_name = $_POST['user_name'];
     $contents = $_POST['contents'];
     $contents = nl2br($contents);
-    $id = 0;
-    $id = $id + 1;
 
-    $data = "<hr>\r\n";
-    $data = $data."<p>".$id."</p>\r\n";
-    $data = $data."<p>タイトル:".$title."</p>\r\n";
-    $data = $data."<p>投稿日時:".$date."</p>\r\n";
-    $data = $data."<p>投稿者:".$user_name."</p>\r\n";
-    $data = $data."<p>内容:</p>\r\n";
-    $data = $data."<p>".$contents."</p>\r\n";
-    $data = $data."<form method='POST'action='edit.php'>\r\n";
-    $data = $data."<input type='submit' value='編集'>\r\n";
+    // 入力されたデータを配列にする
+    $array = compact("title" , "date" , "user_name" , "contents");
+    $string = implode(',', $array);
+
+    //$data = "<hr>\r\n";
+    //$data = $data."<p>タイトル:".$title."</p>\r\n";
+    //$data = $data."<p>投稿日時:".$date."</p>\r\n"; //時間ずれてる
+    //$data = $data."<p>投稿者:".$user_name."</p>\r\n";
+    //$data = $data."<p>内容:</p>\r\n";
+    //$data = $data."<p>".$contents."</p>\r\n";
+    //$data = $data."<form method='POST'action='edit.php'>\r\n";
+    //$data = $data."<input type='submit' value='編集'>\r\n";
 
 
-    $data_file = 'data.txt';
 
-    $fp = fopen($data_file, 'ab');
-
+    $data_file = 'data.csv';
+    $fp = fopen($data_file, 'ab') or die("OPENエラー $data_file");
+    
     if ($fp){
         if (flock($fp, LOCK_EX)){
-            if (fwrite($fp,  $data) === FALSE){
+            // $context = fread($fp, filesize('data.csv'));
+            // ftruncate($fp, 0);
+            // rewind($fp);
+            // fwrite($fp, $string . "\r\n");
+            // fwrite($fp, $context);
+
+            if (fputs($fp,  $string . "\r\n") === FALSE){
                 print('ファイル書き込みに失敗しました');
             }
-
             flock($fp, LOCK_UN);
         }else{
             print('ファイルロックに失敗しました');
         }
     }
-
     fclose($fp);
 }
 
@@ -78,7 +86,6 @@ if (isset($_POST['post'])) {
     header('Location: ./index.php');
     exit;
 }
-
 
 
 
